@@ -159,10 +159,28 @@ document.addEventListener('astro:after-swap', setupThemeToggle)
 
 <!-- Language Switcher Script -->
 <script is:inline>
-  // 初始化事件监听
-  document.addEventListener('DOMContentLoaded', initLanguageSwitcher);
-  document.addEventListener('astro:page-load', initLanguageSwitcher);
-  document.addEventListener('astro:after-swap', initLanguageSwitcher);
+  // 全局函数，避免作用域问题
+  function toggleLanguageDropdown(event, dropdown, button) {
+    event.stopPropagation();
+    const isHidden = dropdown.classList.contains('hidden');
+    
+    if (isHidden) {
+      dropdown.classList.remove('hidden');
+      button.setAttribute('aria-expanded', 'true');
+    } else {
+      dropdown.classList.add('hidden');
+      button.setAttribute('aria-expanded', 'false');
+    }
+  }
+  
+  function closeLanguageDropdownOnOutsideClick(event, dropdown, button) {
+    if (!dropdown.classList.contains('hidden') && 
+        !dropdown.contains(event.target) && 
+        event.target !== button) {
+      dropdown.classList.add('hidden');
+      button.setAttribute('aria-expanded', 'false');
+    }
+  }
 
   function initLanguageSwitcher() {
     const languageButton = document.getElementById('language-switcher-button');
@@ -170,36 +188,18 @@ document.addEventListener('astro:after-swap', setupThemeToggle)
     
     if (!languageButton || !languageDropdown) return;
     
-    // 移除可能已存在的事件监听器
-    languageButton.removeEventListener('click', toggleLanguageDropdown);
-    document.removeEventListener('click', closeLanguageDropdownOnOutsideClick);
+    // 使用直接函数而不是内部函数
+    languageButton.onclick = (event) => toggleLanguageDropdown(event, languageDropdown, languageButton);
+    document.addEventListener('click', (event) => closeLanguageDropdownOnOutsideClick(event, languageDropdown, languageButton));
     
-    // 添加新的事件监听器
-    languageButton.addEventListener('click', toggleLanguageDropdown);
-    document.addEventListener('click', closeLanguageDropdownOnOutsideClick);
-    
-    // 切换下拉菜单显示状态
-    function toggleLanguageDropdown(event) {
-      event.stopPropagation();
-      const isHidden = languageDropdown.classList.contains('hidden');
-      
-      if (isHidden) {
-        languageDropdown.classList.remove('hidden');
-        languageButton.setAttribute('aria-expanded', 'true');
-      } else {
-        languageDropdown.classList.add('hidden');
-        languageButton.setAttribute('aria-expanded', 'false');
-      }
-    }
-    
-    // 点击外部区域关闭下拉菜单
-    function closeLanguageDropdownOnOutsideClick(event) {
-      if (!languageDropdown.classList.contains('hidden') && 
-          !languageDropdown.contains(event.target) && 
-          event.target !== languageButton) {
-        languageDropdown.classList.add('hidden');
-        languageButton.setAttribute('aria-expanded', 'false');
-      }
-    }
+    // 确保在Chrome中按钮可点击
+    languageButton.style.cursor = 'pointer';
+    languageButton.style.userSelect = 'none';
+    languageButton.style.webkitUserSelect = 'none';
   }
+  
+  // 初始化事件监听
+  document.addEventListener('DOMContentLoaded', initLanguageSwitcher);
+  document.addEventListener('astro:page-load', initLanguageSwitcher);
+  document.addEventListener('astro:after-swap', initLanguageSwitcher);
 </script>
