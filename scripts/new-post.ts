@@ -29,7 +29,8 @@ if (existsSync(fullPath)) {
 mkdirSync(dirname(fullPath), { recursive: true })
 
 // Prepare file content
-const today = new Date().toISOString().split('T')[0]
+const now = new Date()
+const today = `${now.toISOString().split('T')[0]} ${now.toTimeString().split(' ')[0]}`
 const content = `---
 title: ${baseName}
 published: ${today}
