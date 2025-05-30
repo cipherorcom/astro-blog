@@ -1,8 +1,10 @@
 ---
 import LanguageSwitcherIcon from '@/assets/icons/language-switcher.svg'
 import ThemeToggleIcon from '@/assets/icons/theme-toggle.svg'
-import { moreLocales, themeConfig } from '@/config'
-import { getNextGlobalLangPath, getNextSupportedLangPath } from '@/i18n/path'
+import { allLocales, defaultLocale, moreLocales, themeConfig } from '@/config'
+import { ui } from '@/i18n/ui'
+import { getLangFromPath } from '@/i18n/lang'
+import { buildNextLangPath } from '@/i18n/path'
 import { isPostPage, isTagPage } from '@/utils/page'
 
 interface Props {
@@ -18,15 +20,30 @@ const { supportedLangs } = Astro.props
 const currentPath = Astro.url.pathname
 const isPost = isPostPage(currentPath)
 const isTag = isTagPage(currentPath)
+const currentLang = getLangFromPath(currentPath)
 
 // Check if there are other languages to switch
 const showLanguageSwitcher = moreLocales.length > 0
 // Check if only the supported language switch list is used
 const useSupportedLangs = isPost || (isTag && supportedLangs.length > 0)
-// Choose a language switch list according to the page type
-const nextUrl = useSupportedLangs
-  ? getNextSupportedLangPath(currentPath, supportedLangs) // Switch between supported languages in post/tag page
-  : getNextGlobalLangPath(currentPath) // Switch between all languages in other pages
+
+// 根据页面类型选择要显示的语言列表
+const availableLangs = useSupportedLangs ? supportedLangs : allLocales
+
+// 语言名称映射
+const langNames = {
+  'de': 'Deutsch',
+  'en': 'English',
+  'es': 'Español',
+  'fr': 'Français',
+  'ja': '日本語',
+  'ko': '한국어',
+  'pl': 'Polski',
+  'pt': 'Português',
+  'ru': 'Русский',
+  'zh': '简体中文',
+  'zh-tw': '繁體中文'
+}
 ---
 
 <div
@@ -37,16 +54,39 @@ const nextUrl = useSupportedLangs
 >
   <!-- Language Switcher -->
   {showLanguageSwitcher && (
-    <a
-      href={nextUrl}
-      class="aspect-square w-4 c-secondary active:scale-90 hover:c-primary"
-      aria-label="Switch website language"
-    >
-      <LanguageSwitcherIcon
-        aria-hidden="true"
-        fill="currentColor"
-      />
-    </a>
+    <div class="relative" id="language-switcher">
+      <button
+        id="language-switcher-button"
+        class="aspect-square w-4 c-secondary active:scale-90 hover:c-primary flex items-center"
+        aria-label="切换网站语言"
+        aria-haspopup="true"
+        aria-expanded="false"
+      >
+        <LanguageSwitcherIcon
+          aria-hidden="true"
+          fill="currentColor"
+        />
+      </button>
+      
+      <div 
+        id="language-dropdown" 
+        class="absolute hidden bottom-full mb-2 right-0 bg-background shadow-lg rounded-md p-2 min-w-32 z-50 border border-secondary/20"
+        style="box-shadow: 0 4px 12px rgba(0,0,0,0.15);"
+      >
+        <ul class="flex flex-col gap-1.5">
+          {availableLangs.map(lang => (
+            <li>
+              <a 
+                href={buildNextLangPath(currentPath, currentLang, lang)}
+                class={`block px-3 py-1.5 text-sm rounded-md transition-colors ${currentLang === lang ? 'bg-primary/10 font-bold c-primary' : 'hover:bg-secondary/5 c-secondary hover:c-primary'}`}
+              >
+                {langNames[lang as keyof typeof langNames] || lang}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
   )}
 
   <!-- Theme Toggle -->
@@ -116,4 +156,51 @@ function setupThemeToggle() {
 // Initialize click event (on first load or page transition)
 setupThemeToggle()
 document.addEventListener('astro:after-swap', setupThemeToggle)
+</script>
+
+<!-- Language Switcher Script -->
+<script is:inline>
+  // 初始化事件监听
+  document.addEventListener('DOMContentLoaded', initLanguageSwitcher);
+  document.addEventListener('astro:page-load', initLanguageSwitcher);
+  document.addEventListener('astro:after-swap', initLanguageSwitcher);
+
+  function initLanguageSwitcher() {
+    const languageButton = document.getElementById('language-switcher-button');
+    const languageDropdown = document.getElementById('language-dropdown');
+    
+    if (!languageButton || !languageDropdown) return;
+    
+    // 移除可能已存在的事件监听器
+    languageButton.removeEventListener('click', toggleLanguageDropdown);
+    document.removeEventListener('click', closeLanguageDropdownOnOutsideClick);
+    
+    // 添加新的事件监听器
+    languageButton.addEventListener('click', toggleLanguageDropdown);
+    document.addEventListener('click', closeLanguageDropdownOnOutsideClick);
+    
+    // 切换下拉菜单显示状态
+    function toggleLanguageDropdown(event) {
+      event.stopPropagation();
+      const isHidden = languageDropdown.classList.contains('hidden');
+      
+      if (isHidden) {
+        languageDropdown.classList.remove('hidden');
+        languageButton.setAttribute('aria-expanded', 'true');
+      } else {
+        languageDropdown.classList.add('hidden');
+        languageButton.setAttribute('aria-expanded', 'false');
+      }
+    }
+    
+    // 点击外部区域关闭下拉菜单
+    function closeLanguageDropdownOnOutsideClick(event) {
+      if (!languageDropdown.classList.contains('hidden') && 
+          !languageDropdown.contains(event.target) && 
+          event.target !== languageButton) {
+        languageDropdown.classList.add('hidden');
+        languageButton.setAttribute('aria-expanded', 'false');
+      }
+    }
+  }
 </script>

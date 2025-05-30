@@ -1,5 +1,6 @@
 ---
 lang: zh
 ---
+> 花里胡哨版 https://blog.cipheror.com
 
-Retypeset 是一款基于 [Astro](https://astro.build/) 框架的静态博客主题，中文名为重新编排。本主题以 [活版印字](https://astro-theme-typography.vercel.app/) 为设计灵感，通过建立全新的视觉规范，对所有页面进行重新编排，打造纸质书页般的阅读体验，再现版式之美。所见皆为细节，方寸尽显优雅。
+之前看到群友发了这款主题，初看没什么感觉，但是后面想起来觉得越看越好看，然后就有了这个简洁版的博客。

@@ -1,4 +1,3 @@
-import type { Preset } from 'unocss'
 import {
   defineConfig,
   presetAttributify,
@@ -6,6 +5,8 @@ import {
   transformerDirectives,
   transformerVariantGroup,
 } from 'unocss'
+
+import type { Preset } from 'unocss'
 import presetTheme from 'unocss-preset-theme'
 import { themeConfig } from './src/config.ts'
 
@@ -44,7 +45,7 @@ export default defineConfig({
     fontFamily: {
       title: ['Snell-Black', 'EarlySummer-Subset', 'EarlySummer', 'ui-serif', 'Georgia', 'Cambria', 'Times New Roman', 'Times', 'serif'],
       navbar: ['STIX-Italic', 'EarlySummer-Subset', 'EarlySummer', 'ui-serif', 'Georgia', 'Cambria', 'Times New Roman', 'Times', 'serif'],
-      time: ['Snell-Bold', 'ui-serif', 'Georgia', 'Cambria', 'Times New Roman', 'Times', 'serif'],
+      time: ['STIX', 'ui-serif', 'Georgia', 'Cambria', 'Times New Roman', 'Times', 'serif'],
       serif: ['STIX', 'EarlySummer', 'ui-serif', 'Georgia', 'Cambria', 'Times New Roman', 'Times', 'serif'],
     },
   },
