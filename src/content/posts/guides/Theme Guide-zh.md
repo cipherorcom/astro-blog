@@ -85,7 +85,7 @@ global: {
   // 更多语言
   // 生成 '/en/' '/es/' 等多语言路径
   // 不要重复填写默认语言，可以为空 []
-  moreLocales: ['en', 'es', 'ja', 'ru', 'zh-tw'] // ['de', 'en', 'es', 'fr', 'ja', 'ko', 'pl', 'pt', 'ru', 'zh', 'zh-tw']
+  moreLocales: ['en', 'ja'] // ['de', 'en', 'es', 'fr', 'ja', 'ko', 'pl', 'pt', 'ru', 'zh', 'zh-tw']
   // 字体样式
   fontStyle: 'sans' // sans, serif
   // 文章日期格式
