@@ -3,7 +3,8 @@ import LanguageSwitcherIcon from '@/assets/icons/language-switcher.svg'
 import MoonIcon from '@/assets/icons/moon.svg'
 import SunIcon from '@/assets/icons/sun.svg'
 import { moreLocales, themeConfig } from '@/config'
-import { getNextGlobalLangPath, getNextSupportedLangPath } from '@/i18n/path'
+import { getLangFromPath } from '@/i18n/lang'
+import { getNextLangPath } from '@/i18n/path'
 
 interface Props {
   supportedLangs: string[]
@@ -16,13 +17,20 @@ const {
 
 const { supportedLangs } = Astro.props
 const currentPath = Astro.url.pathname
+const currentLang = getLangFromPath(currentPath)
 
 // Check if there are other languages to switch
 const showLanguageSwitcher = moreLocales.length > 0
-// Choose a language switch list according to supported languages
-const nextUrl = supportedLangs.length > 0
-  ? getNextSupportedLangPath(currentPath, supportedLangs) // Use supported languages when available
-  : getNextGlobalLangPath(currentPath) // Fallback to all languages when no supported languages data
+
+// Available languages to switch to
+const availableLangs = supportedLangs.length > 0 ? supportedLangs : moreLocales
+
+// Language display names
+const langNames = {
+  en: 'English',
+  zh: '简体中文',
+  ja: '日本語',
+}
 ---
 
 <div
@@ -33,17 +41,39 @@ const nextUrl = supportedLangs.length > 0
 >
   <!-- Language Switcher -->
   {showLanguageSwitcher && (
-    <a
-      id="language-switcher"
-      href={nextUrl}
-      class="aspect-square w-4 c-secondary active:scale-90 hover:c-primary"
-      aria-label="Switch website language"
-    >
-      <LanguageSwitcherIcon
-        aria-hidden="true"
-        fill="currentColor"
-      />
-    </a>
+    <div class="relative" id="language-switcher">
+      <button
+        id="language-switcher-button"
+        class="aspect-square w-4 flex items-center c-secondary active:scale-90 hover:c-primary"
+        aria-label="切换网站语言"
+        aria-haspopup="true"
+        aria-expanded="false"
+      >
+        <LanguageSwitcherIcon
+          aria-hidden="true"
+          fill="currentColor"
+        />
+      </button>
+
+      <div
+        id="language-dropdown"
+        class="absolute bottom-full right-0 z-50 mb-2 hidden min-w-32 border border-secondary/20 rounded-md bg-background p-2 shadow-lg"
+        style="box-shadow: 0 4px 12px rgba(0,0,0,0.15);"
+      >
+        <ul class="flex flex-col gap-1.5">
+          {availableLangs.map(lang => (
+            <li>
+              <a
+                href={getNextLangPath(currentPath, currentLang, lang)}
+                class={`block rounded-md px-3 py-1.5 text-sm transition-colors ${currentLang === lang ? 'bg-primary/10 c-primary font-bold' : 'c-secondary hover:bg-secondary/5 hover:c-primary'}`}
+              >
+                {langNames[lang as keyof typeof langNames] || lang}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
   )}
 
   <!-- Theme Toggle -->
@@ -168,8 +198,71 @@ initializeThemeIcons()
 document.addEventListener('astro:after-swap', initializeThemeIcons)
 </script>
 
+<!-- Language Switcher Script -->
+<script is:inline>
+// 全局函数，避免作用域问题
+function toggleLanguageDropdown(event, dropdown, button) {
+  event.stopPropagation()
+  const isHidden = dropdown.classList.contains('hidden')
+
+  if (isHidden) {
+    dropdown.classList.remove('hidden')
+    button.setAttribute('aria-expanded', 'true')
+  }
+  else {
+    dropdown.classList.add('hidden')
+    button.setAttribute('aria-expanded', 'false')
+  }
+}
+
+function closeLanguageDropdownOnOutsideClick(event, dropdown, button) {
+  if (!dropdown.classList.contains('hidden')
+    && !dropdown.contains(event.target)
+    && event.target !== button) {
+    dropdown.classList.add('hidden')
+    button.setAttribute('aria-expanded', 'false')
+  }
+}
+
+function initLanguageSwitcher() {
+  const languageButton = document.getElementById('language-switcher-button')
+  const languageDropdown = document.getElementById('language-dropdown')
+
+  if (!languageButton || !languageDropdown)
+    return
+
+  // 使用直接函数而不是内部函数
+  languageButton.onclick = event => toggleLanguageDropdown(event, languageDropdown, languageButton)
+  document.addEventListener('click', event => closeLanguageDropdownOnOutsideClick(event, languageDropdown, languageButton))
+
+  // 确保在Chrome中按钮可点击
+  languageButton.style.cursor = 'pointer'
+  languageButton.style.userSelect = 'none'
+  languageButton.style.webkitUserSelect = 'none'
+}
+
+// 初始化事件监听
+document.addEventListener('DOMContentLoaded', initLanguageSwitcher)
+document.addEventListener('astro:page-load', initLanguageSwitcher)
+document.addEventListener('astro:after-swap', initLanguageSwitcher)
+</script>
+
 <style>
 .theme-icon {
   transition: opacity 0.2s ease-in-out;
+}
+
+#language-dropdown {
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+#language-dropdown ul li a {
+  display: block;
+  white-space: nowrap;
+}
+
+#language-dropdown ul li a:hover {
+  transform: none !important;
 }
 </style>
